@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.so
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# Environment variables
+.env
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Databases and caches
+*.db
+*.sqlite3
+*.log
+
+# Data files (optional, depends on whether you want to commit the CSV)
+data/*.csv
+
+# Docker
+*.dockerignore
