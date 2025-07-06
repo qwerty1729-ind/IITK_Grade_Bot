@@ -1,35 +1,50 @@
-# Python
+# --- Python Virtual Environments ---
+# Never commit your virtual environment folder.
+venv/
+.venv/
+env/
+.env/
+
+# --- Python Cache & Artifacts ---
+# These are generated automatically by Python.
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
-.Python
-*.egg-info/
-dist/
-build/
-*.so
+*$py.class
 
-# Virtual environment
-venv/
-env/
-.venv/
-
-# Environment variables
+# --- Secrets ---
+# VERY IMPORTANT: Keep your API keys and database passwords out of the repository.
 .env
+.env.*
+!/.env.example
 
-# IDEs and editors
+# --- IDE & Editor Config ---
+# Your personal editor settings don't belong in the project.
 .vscode/
 .idea/
-*.sublime-project
-*.sublime-workspace
+*.suo
+*.ntvs*
 
-# Databases and caches
-*.db
-*.sqlite3
+# --- Operating System Files ---
+# Ignore OS-specific files.
+.DS_Store
+Thumbs.db
+
+# --- Windows Junk ---
+# Files added by Windows when downloading from the internet.
+*.Zone.Identifier
+
+# --- Build & Dependency Artifacts ---
+# These are created when you build or install packages.
+build/
+dist/
+*.egg-info/
+node_modules/
+
+# --- Log & Temporary Files ---
+# Don't commit log files or temporary archives.
 *.log
-
-# Data files (optional, depends on whether you want to commit the CSV)
-data/*.csv
-
-# Docker
-*.dockerignore
+*.tmp
+*.zip
+*.tar.gz
