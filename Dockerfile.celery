@@ -1,0 +1,16 @@
+# Use a slim and specific Python version
+FROM python:3.11-slim
+
+# Set the main directory for our app
+WORKDIR /app
+
+# Copy and install requirements first to use Docker's cache
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy our application code
+# We need the 'api' folder because that's where the Celery app lives
+COPY ./api/ /app/api/
+COPY ./scripts/ /app/scripts/
+
+# The actual command is run from docker-compose.yml, so no CMD needed here.
