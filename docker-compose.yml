@@ -1,0 +1,103 @@
+# Define common environment variables for services that connect to the DB and Redis
+x-common-env: &common-env
+  DATABASE_URL: "postgresql+asyncpg://testuser:testpassword@db:5432/gradedb"
+  REDIS_URL: "redis://redis:6379/0"
+
+services:
+  #Core Dependencies
+  db:
+    image: postgres:15
+    container_name: postgres_gradedb
+    environment:
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpassword
+      POSTGRES_DB: gradedb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    # Healthcheck ensures other services wait until the database is truly ready
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testuser -d gradedb -q"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - app_network
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis_broker
+    ports:
+      - "6379:6379"
+    networks:
+      - app_network
+    restart: unless-stopped
+
+  #Application Services 
+  api:
+    build:
+      context: .
+      dockerfile: ./api/Dockerfile
+    container_name: backend_api
+    environment:
+      <<: *common-env # Use the common environment variables
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/app/api # For live code reloading
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - app_network
+
+  bot:
+    build:
+      context: .
+      dockerfile: ./bot/Dockerfile
+    container_name: telegram_bot
+    environment:
+      # These values are pulled from the .env file
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_ADMIN_IDS=${TELEGRAM_ADMIN_IDS}
+      - TELEGRAM_ADMIN_CHANNEL_ID=${TELEGRAM_ADMIN_CHANNEL_ID}
+      - API_BASE_URL=http://api:8000
+    depends_on:
+      - api
+    volumes:
+      - ./bot:/app # For live code reloading
+    networks:
+      - app_network
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    container_name: celery_worker_broadcasts
+    command: celery -A api.celery_app:app worker -l INFO -Q broadcasts -c 1
+    environment:
+      <<: *common-env # Use the same common variables
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN} # Celery also needs the bot token
+    volumes:
+      - ./api:/app/api # Mount the API code so Celery can find its tasks
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - app_network
+
+# --- Volumes & Networks ---
+volumes:
+  postgres_data:
+    name: iitkgradedb_pgdata
+
+networks:
+  app_network:
+    driver: bridge
